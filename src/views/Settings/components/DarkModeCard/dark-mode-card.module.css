@@ -1,0 +1,9 @@
+.switch {
+	:hover {
+		cursor: pointer;
+	}
+
+	> * {
+		transition: transform 2.5s ease-in-out;
+	}
+}

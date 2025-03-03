@@ -1,0 +1,9 @@
+.topBarWrapper {
+	display: flex;
+}
+
+.topBarContent {
+	display: flex;
+	padding: 0.5rem;
+	justify-content: flex-end;
+}
