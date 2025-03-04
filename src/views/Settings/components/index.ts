@@ -1,2 +1,4 @@
-import { DarkModeCard } from "./DarkModeCard/DarkModeCard";
-export { DarkModeCard };
+import { SettingsList } from "./SettingsList/SettingsList";
+import { DarkModeCard } from "./DarkModeCard";
+
+export { DarkModeCard, SettingsList };

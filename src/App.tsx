@@ -1,13 +1,25 @@
 import { AppWrapper, Navbar, PageArea } from "./components";
 import "./App.css";
 import { MyWatchlists } from "./views";
-import { MantineProvider } from "@mantine/core";
+import { createTheme, MantineProvider } from "@mantine/core";
 import { Routes, Route } from "react-router-dom";
 import { Settings } from "./views/Settings";
+import "./index.css";
+
+const theme = createTheme({
+	fontFamily: "JetBrains Mono",
+	fontSizes: {
+		xs: "0.5rem",
+		sm: "0.75rem",
+		md: "1rem",
+		lg: "1.25rem",
+		xl: "2rem",
+	},
+});
 
 function App() {
 	return (
-		<MantineProvider defaultColorScheme="light">
+		<MantineProvider theme={theme} defaultColorScheme="auto">
 			<AppWrapper>
 				<Navbar />
 				<PageArea>

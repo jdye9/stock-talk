@@ -9,7 +9,12 @@ export const NavbarLink = ({
 	onClick,
 }: NavbarLinkProps) => {
 	return (
-		<Tooltip label={label} position="right" transitionProps={{ duration: 0 }}>
+		<Tooltip
+			label={label}
+			position="right"
+			transitionProps={{ duration: 0 }}
+			zIndex={1000}
+		>
 			<UnstyledButton
 				onClick={() => {
 					onClick();

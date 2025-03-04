@@ -2,7 +2,6 @@ import {
 	Card,
 	Image,
 	Text,
-	Group,
 	Switch,
 	Flex,
 	useMantineColorScheme,
@@ -15,12 +14,10 @@ import DayMountain from "@/assets/day-mountain.png";
 
 export const DarkModeCard = () => {
 	// -> colorScheme is 'auto' | 'light' | 'dark'
-	const { setColorScheme } = useMantineColorScheme();
+	const { setColorScheme } = useMantineColorScheme({ keepTransitions: true });
 
-	// -> computedColorScheme is 'light' | 'dark', argument is the default value
-	const computedColorScheme = useComputedColorScheme(
-		window.localStorage["mantine-color-scheme-value"] || "light"
-	);
+	// -> computedColorScheme is 'light' | 'dark'
+	const computedColorScheme = useComputedColorScheme();
 
 	// Correct color scheme toggle implementation
 	// computedColorScheme is always either 'light' or 'dark'
@@ -29,7 +26,7 @@ export const DarkModeCard = () => {
 	};
 
 	return (
-		<Card shadow="sm" padding="lg" radius="md" withBorder>
+		<Card shadow="sm" padding="lg" radius="md" withBorder w={"325px"} mx="auto">
 			<Card.Section>
 				{
 					<Image
@@ -40,17 +37,22 @@ export const DarkModeCard = () => {
 				}
 			</Card.Section>
 
-			<Flex gap={"1rem"} direction={"column"}>
-				<Group justify="space-between" mt="md">
-					<Text fw={500}>Appearance</Text>
-				</Group>
-
-				<Text size="sm" c="dimmed">
-					Toggle between light and dark modes.
-				</Text>
+			<Flex direction="column" gap="4rem" align="flex-start">
+				<Flex
+					direction="column"
+					justify="space-between"
+					mt="md"
+					align="flex-start"
+				>
+					<Text size="lg" fw={500}>
+						Appearance
+					</Text>
+					<Text size="md" c="dimmed">
+						Toggle between light and dark modes.
+					</Text>
+				</Flex>
 
 				<Switch
-					checked={computedColorScheme !== "dark"}
 					size="xl"
 					color="dark.4"
 					onLabel={
@@ -67,8 +69,11 @@ export const DarkModeCard = () => {
 							color="var(--mantine-color-blue-6)"
 						/>
 					}
-					onChange={() => toggleColorScheme()}
+					onChange={() => {
+						toggleColorScheme();
+					}}
 					className={classes.switch}
+					checked={computedColorScheme === "dark"}
 				/>
 			</Flex>
 		</Card>

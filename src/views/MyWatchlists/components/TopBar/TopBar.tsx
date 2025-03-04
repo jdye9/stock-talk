@@ -3,7 +3,7 @@ import classes from "./top-bar.module.css";
 import { IconPlus } from "@tabler/icons-react";
 
 export const TopBar = () => {
-	const { colorScheme } = useMantineColorScheme();
+	const { colorScheme } = useMantineColorScheme({ keepTransitions: true });
 	const theme = useMantineTheme();
 
 	return (
