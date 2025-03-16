@@ -1,6 +1,7 @@
+import { SortDirection } from "./../../types";
 export type TableHeaderProps = {
 	children: React.ReactNode;
-	reversed: boolean;
+	sortDirection: SortDirection;
 	sorted: boolean;
 	onSort: () => void;
 };

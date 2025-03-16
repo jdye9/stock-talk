@@ -9,14 +9,14 @@ import { Center, Group, Table, UnstyledButton, Text } from "@mantine/core";
 
 export const TableHeader = ({
 	children,
-	reversed,
+	sortDirection,
 	sorted,
 	onSort,
 }: TableHeaderProps) => {
 	const Icon = sorted
-		? reversed
-			? IconChevronUp
-			: IconChevronDown
+		? sortDirection == "desc"
+			? IconChevronDown
+			: IconChevronUp
 		: IconSelector;
 
 	return (

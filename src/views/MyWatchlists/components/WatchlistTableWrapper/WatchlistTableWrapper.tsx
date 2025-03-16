@@ -7,7 +7,7 @@ export const WatchlistTableWrapper = ({
 	watchlistTitle,
 }: WatchlistWrapperProps) => {
 	return (
-		<Card w="80%" padding="xl" m="auto">
+		<Card shadow="sm" radius="md" withBorder w="80%" padding="xl" m="auto">
 			<Text size="xl" mb={10}>
 				{watchlistTitle}
 			</Text>

@@ -1,4 +1,4 @@
-import { RowData } from "./types";
+import { RowData, SortDirection } from "./types";
 import { keys } from "@mantine/core";
 
 export const filterData = (data: RowData[], search: string) => {
@@ -13,7 +13,11 @@ export const filterData = (data: RowData[], search: string) => {
 
 export const sortData = (
 	data: RowData[],
-	payload: { sortBy: keyof RowData | null; reversed: boolean; search: string }
+	payload: {
+		sortBy: keyof RowData | "";
+		direction: SortDirection;
+		search: string;
+	}
 ) => {
 	const { sortBy } = payload;
 
@@ -24,7 +28,7 @@ export const sortData = (
 	return filterData(
 		[...data].sort((a, b) => {
 			if (typeof a[sortBy] === "string" && typeof b[sortBy] === "string") {
-				if (payload.reversed) {
+				if (payload.direction === "desc") {
 					return b[sortBy].localeCompare(a[sortBy]);
 				}
 				return a[sortBy].localeCompare(b[sortBy]);
@@ -32,7 +36,7 @@ export const sortData = (
 				typeof a[sortBy] === "number" &&
 				typeof b[sortBy] === "number"
 			) {
-				if (payload.reversed) {
+				if (payload.direction === "desc") {
 					return b[sortBy] - a[sortBy];
 				}
 				return a[sortBy] - b[sortBy];

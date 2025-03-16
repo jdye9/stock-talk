@@ -1,0 +1,11 @@
+.head {
+	z-index: 0 !important;
+	background-color: light-dark(
+		var(--mantine-color-gray-0) !important,
+		var(--mantine-color-dark-7) !important
+	);
+}
+
+.scrolled {
+	box-shadow: var(--mantine-shadow-sm);
+}

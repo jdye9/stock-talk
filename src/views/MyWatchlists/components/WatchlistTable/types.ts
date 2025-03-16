@@ -4,3 +4,5 @@ export type RowData = {
 	priceChange: number;
 	priceChangePercent: number;
 };
+
+export type SortDirection = "asc" | "desc" | "";
