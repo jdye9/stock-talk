@@ -1,0 +1,12 @@
+.searchWrapper {
+	width: 75%;
+	margin: auto;
+	padding-top: 70px;
+}
+
+.keyImage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+}

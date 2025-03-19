@@ -1,9 +1,8 @@
 import { AppWrapper, Navbar, PageArea } from "./components";
 import "./App.css";
-import { MyWatchlists } from "./views";
+import { MyWatchlists, Settings, SearchEquities } from "./views";
 import { createTheme, MantineProvider } from "@mantine/core";
 import { Routes, Route } from "react-router-dom";
-import { Settings } from "./views/Settings";
 import "./index.css";
 
 const theme = createTheme({
@@ -26,6 +25,7 @@ function App() {
 					<Routes>
 						<Route path="my-watchlists" element={<MyWatchlists />} />
 						<Route path="settings" element={<Settings />} />
+						<Route path="search-equities" element={<SearchEquities />} />
 					</Routes>
 				</PageArea>
 			</AppWrapper>
