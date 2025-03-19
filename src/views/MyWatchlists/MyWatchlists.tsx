@@ -1,4 +1,4 @@
-import { Divider, Flex } from "@mantine/core";
+import { Flex, ScrollArea } from "@mantine/core";
 import {
 	NoWatchlists,
 	TopBar,
@@ -6,27 +6,42 @@ import {
 	WatchlistTable,
 	WatchlistList,
 } from "./components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import classes from "./my-watchlists.module.css";
 
 export const MyWatchlists = () => {
-	const [watchlists] = useState([":"]);
+	const [scrolled, setScrolled] = useState(false);
+	const [watchlists] = ["HI"];
+
+	useEffect(() => {
+		console.log(scrolled);
+	}, [scrolled]);
 
 	return (
-		<Flex direction={"column"} h={"100%"}>
-			<TopBar />
-			<Divider h={1} />
-			{!watchlists.length ? (
-				<NoWatchlists />
-			) : (
-				<WatchlistList>
-					<WatchlistTableWrapper watchlistTitle="Tech Portfolio">
-						<WatchlistTable />
-					</WatchlistTableWrapper>
-					<WatchlistTableWrapper watchlistTitle="Meme Stocks">
-						<WatchlistTable />
-					</WatchlistTableWrapper>
-				</WatchlistList>
-			)}
-		</Flex>
+		<>
+			<TopBar isScrolled={scrolled} />
+			<ScrollArea
+				onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+				className={classes.pageArea}
+			>
+				<Flex direction={"column"}>
+					{!watchlists.length ? (
+						<NoWatchlists />
+					) : (
+						<WatchlistList>
+							<WatchlistTableWrapper watchlistTitle="Tech Portfolio">
+								<WatchlistTable />
+							</WatchlistTableWrapper>
+							<WatchlistTableWrapper watchlistTitle="Meme Stocks">
+								<WatchlistTable />
+							</WatchlistTableWrapper>
+							<WatchlistTableWrapper watchlistTitle="Meme Stocks">
+								<WatchlistTable />
+							</WatchlistTableWrapper>
+						</WatchlistList>
+					)}
+				</Flex>
+			</ScrollArea>
+		</>
 	);
 };

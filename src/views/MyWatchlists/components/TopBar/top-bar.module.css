@@ -1,9 +1,16 @@
 .topBarWrapper {
-	display: flex;
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+	background-color: var(--mantine-color-body);
 }
 
 .topBarContent {
 	display: flex;
 	padding: 0.5rem;
 	justify-content: flex-end;
+}
+
+.scrolled {
+	box-shadow: var(--mantine-shadow-sm);
 }
