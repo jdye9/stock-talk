@@ -11,7 +11,7 @@ import { TopBarProps } from "./types";
 import cx from "clsx";
 import { useEffect } from "react";
 
-export const TopBar = ({ isScrolled }: TopBarProps) => {
+export const TopBar = ({ isScrolled, addModalHandlers }: TopBarProps) => {
 	const { colorScheme } = useMantineColorScheme({ keepTransitions: true });
 	const theme = useMantineTheme();
 
@@ -32,6 +32,7 @@ export const TopBar = ({ isScrolled }: TopBarProps) => {
 							: theme.colors.green[6]
 					}
 					rightSection={<IconPlus size={14} />}
+					onClick={() => {addModalHandlers.open()}}
 				>
 					Add Watchlist
 				</Button>

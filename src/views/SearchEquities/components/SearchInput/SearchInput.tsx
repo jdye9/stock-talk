@@ -13,6 +13,7 @@ export const SearchInput = ({ spotlight }: SearchInputProps) => {
 	return (
 		<Box className={classes.searchWrapper}>
 			<Button
+				className={classes.searchButton}
 				justify="space-between"
 				fullWidth
 				rightSection={hotkeys}

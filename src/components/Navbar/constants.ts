@@ -9,7 +9,7 @@ import {
 } from "@tabler/icons-react";
 
 export const topList = [
-	{ icon: IconTrendingUp, label: "My Watchlist", href: "my-watchlists" },
+	{ icon: IconTrendingUp, label: "My Watchlists", href: "my-watchlists" },
 	{ icon: IconShare, label: "Watchlist Hub", href: "watchlist-hub" },
 	{ icon: IconUsersGroup, label: "Manage Friends", href: "manage-friends" },
 	{ icon: IconSearch, label: "Search Equities", href: "search-equities" },

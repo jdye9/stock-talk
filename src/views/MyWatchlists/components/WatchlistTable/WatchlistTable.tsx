@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { IconSearch } from "@tabler/icons-react";
 import { ScrollArea, Table, Text, TextInput } from "@mantine/core";
 import { TableHeader } from "./components";
@@ -14,10 +14,6 @@ export const WatchlistTable = () => {
 	const [sortBy, setSortBy] = useState<keyof RowData | "">("");
 	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 	const [scrolled, setScrolled] = useState(false);
-
-	useEffect(() => {
-		console.log(scrolled);
-	}, [scrolled]);
 
 	const setSorting = (field: keyof RowData) => {
 		const direction =
@@ -61,7 +57,7 @@ export const WatchlistTable = () => {
 			/>
 			<ScrollArea
 				h={400}
-				onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+				onScrollPositionChange={({ y }) => {console.log(y); setScrolled(y !== 0)}}
 				overscrollBehavior={"contain"}
 			>
 				<Table

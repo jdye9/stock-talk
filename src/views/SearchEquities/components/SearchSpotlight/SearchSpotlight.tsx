@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Spotlight } from "@mantine/spotlight";
 import { Group, Text } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
@@ -8,35 +8,27 @@ const data = [
 		image: "https://img.icons8.com/clouds/256/000000/futurama-bender.png",
 		title: "Google",
 		description: "GOOG",
-		new: true,
 	},
 
 	{
 		image: "https://img.icons8.com/clouds/256/000000/futurama-mom.png",
 		title: "Amazon",
 		description: "AMZN",
-		new: false,
 	},
 	{
 		image: "https://img.icons8.com/clouds/256/000000/homer-simpson.png",
 		title: "Palantir",
 		description: "PLTR",
-		new: false,
 	},
 	{
 		image: "https://img.icons8.com/clouds/256/000000/spongebob-squarepants.png",
-		title: "MSFT",
-		description: "Microsoft",
-		new: false,
+		title: "Microsoft",
+		description: "MSFT",
 	},
 ];
 
 export const SearchSpotlight = () => {
 	const [query, setQuery] = useState("");
-
-	useEffect(() => {
-		console.log(query);
-	}, [query]);
 
 	const items = data
 		.filter(
@@ -60,6 +52,13 @@ export const SearchSpotlight = () => {
 			</Spotlight.Action>
 		));
 
+	const populateSearchResults = () => {
+		if (query.length) {
+			return items.length ? items : <Spotlight.Empty>Nothing found...</Spotlight.Empty>
+		}
+		return <Spotlight.Empty>Please enter text to begin search...</Spotlight.Empty>
+	}
+
 	return (
 		<>
 			<Spotlight.Root query={query} onQueryChange={setQuery} size={"70%"}>
@@ -68,11 +67,7 @@ export const SearchSpotlight = () => {
 					leftSection={<IconSearch stroke={1.5} />}
 				/>
 				<Spotlight.ActionsList>
-					{items.length > 0 ? (
-						items
-					) : (
-						<Spotlight.Empty>Nothing found...</Spotlight.Empty>
-					)}
+					{populateSearchResults()}
 				</Spotlight.ActionsList>
 			</Spotlight.Root>
 		</>

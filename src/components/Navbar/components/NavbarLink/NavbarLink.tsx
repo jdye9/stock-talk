@@ -13,7 +13,6 @@ export const NavbarLink = ({
 			label={label}
 			position="right"
 			transitionProps={{ duration: 0 }}
-			zIndex={1000}
 		>
 			<UnstyledButton
 				onClick={() => {

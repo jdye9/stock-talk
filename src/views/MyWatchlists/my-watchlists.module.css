@@ -1,3 +1,10 @@
-.pageArea {
+.flexArea {
+	min-height: calc(100vh - 53px);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.scrollArea {
 	height: calc(100vh - 53px);
 }

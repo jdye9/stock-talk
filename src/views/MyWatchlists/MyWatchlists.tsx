@@ -5,26 +5,29 @@ import {
 	WatchlistTableWrapper,
 	WatchlistTable,
 	WatchlistList,
+	AddWatchlistModal,
 } from "./components";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import classes from "./my-watchlists.module.css";
+import {useDisclosure} from "@mantine/hooks";
 
 export const MyWatchlists = () => {
 	const [scrolled, setScrolled] = useState(false);
 	const [watchlists] = ["HI"];
+	const [addModalOpened, addModalHandlers] = useDisclosure(false);
 
 	useEffect(() => {
-		console.log(scrolled);
-	}, [scrolled]);
+		console.log(scrolled)
+	}, [scrolled])
 
 	return (
 		<>
-			<TopBar isScrolled={scrolled} />
+			<TopBar isScrolled={scrolled} addModalHandlers={addModalHandlers} />
 			<ScrollArea
+				className={classes.scrollArea}
 				onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
-				className={classes.pageArea}
 			>
-				<Flex direction={"column"}>
+				<Flex className={classes.flexArea}>
 					{!watchlists.length ? (
 						<NoWatchlists />
 					) : (
@@ -32,16 +35,14 @@ export const MyWatchlists = () => {
 							<WatchlistTableWrapper watchlistTitle="Tech Portfolio">
 								<WatchlistTable />
 							</WatchlistTableWrapper>
-							<WatchlistTableWrapper watchlistTitle="Meme Stocks">
-								<WatchlistTable />
-							</WatchlistTableWrapper>
-							<WatchlistTableWrapper watchlistTitle="Meme Stocks">
+							<WatchlistTableWrapper watchlistTitle="Tech Portfolio">
 								<WatchlistTable />
 							</WatchlistTableWrapper>
 						</WatchlistList>
 					)}
 				</Flex>
 			</ScrollArea>
+			<AddWatchlistModal opened={addModalOpened} addModalHandlers={addModalHandlers} />
 		</>
 	);
 };

@@ -1,8 +1,9 @@
 import { WatchlistTableWrapper } from "./WatchlistTableWrapper";
-import { NoWatchlists } from "./NoWatchlists/NoWatchlists";
+import { NoWatchlists } from "./NoWatchlists";
 import { TopBar } from "./TopBar";
 import { WatchlistTable } from "./WatchlistTable";
 import { WatchlistList } from "./WatchlistList";
+import { AddWatchlistModal } from "./AddWatchlistModal";
 
 export {
 	TopBar,
@@ -10,4 +11,5 @@ export {
 	WatchlistTable,
 	WatchlistTableWrapper,
 	WatchlistList,
+	AddWatchlistModal,
 };
