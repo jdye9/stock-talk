@@ -57,7 +57,9 @@ export const WatchlistTable = () => {
 			/>
 			<ScrollArea
 				h={400}
-				onScrollPositionChange={({ y }) => {console.log(y); setScrolled(y !== 0)}}
+				onScrollPositionChange={({ y }) => {
+					setScrolled(y !== 0);
+				}}
 				overscrollBehavior={"contain"}
 			>
 				<Table

@@ -7,18 +7,14 @@ import {
 	WatchlistList,
 	AddWatchlistModal,
 } from "./components";
-import {useEffect, useState} from "react";
+import { useState } from "react";
 import classes from "./my-watchlists.module.css";
-import {useDisclosure} from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 
 export const MyWatchlists = () => {
 	const [scrolled, setScrolled] = useState(false);
 	const [watchlists] = ["HI"];
 	const [addModalOpened, addModalHandlers] = useDisclosure(false);
-
-	useEffect(() => {
-		console.log(scrolled)
-	}, [scrolled])
 
 	return (
 		<>
@@ -42,7 +38,10 @@ export const MyWatchlists = () => {
 					)}
 				</Flex>
 			</ScrollArea>
-			<AddWatchlistModal opened={addModalOpened} addModalHandlers={addModalHandlers} />
+			<AddWatchlistModal
+				opened={addModalOpened}
+				addModalHandlers={addModalHandlers}
+			/>
 		</>
 	);
 };

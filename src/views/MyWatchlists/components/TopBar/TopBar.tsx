@@ -9,15 +9,10 @@ import classes from "./top-bar.module.css";
 import { IconPlus } from "@tabler/icons-react";
 import { TopBarProps } from "./types";
 import cx from "clsx";
-import { useEffect } from "react";
 
 export const TopBar = ({ isScrolled, addModalHandlers }: TopBarProps) => {
 	const { colorScheme } = useMantineColorScheme({ keepTransitions: true });
 	const theme = useMantineTheme();
-
-	useEffect(() => {
-		console.log(isScrolled);
-	}, [isScrolled]);
 
 	return (
 		<Box
@@ -32,7 +27,9 @@ export const TopBar = ({ isScrolled, addModalHandlers }: TopBarProps) => {
 							: theme.colors.green[6]
 					}
 					rightSection={<IconPlus size={14} />}
-					onClick={() => {addModalHandlers.open()}}
+					onClick={() => {
+						addModalHandlers.open();
+					}}
 				>
 					Add Watchlist
 				</Button>

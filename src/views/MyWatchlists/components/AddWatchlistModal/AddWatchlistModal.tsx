@@ -50,36 +50,37 @@ export const AddWatchlistModal = ({
 	const displayedOptions = useMemo(() => {
 		if (!allOptions.length) return [];
 
-		// Always include selected options
-		const selected = allOptions.filter((opt) =>
-			form.values.initialEquities.includes(opt.value)
-		);
+		// Selected options should always display the ticker (value) as label
+		const selectedSet = new Set(form.values.initialEquities);
+		const selected = allOptions
+			.filter((opt) => selectedSet.has(opt.value))
+			.map((opt) => ({ ...opt, label: opt.value }));
 
-		if (!search) return selected;
+		if (!search) {
+			return [{ group: "Stocks + ETFs", items: selected }];
+		}
 
 		const lower = search.toLowerCase();
 
-		// Match symbol label includes
-		const matched = allOptions.filter((opt) =>
-			opt.label.toLowerCase().includes(lower)
+		const matched = allOptions.filter(
+			(opt) =>
+				opt.label.toLowerCase().includes(lower) ||
+				opt.value.toLowerCase().includes(lower)
 		);
 
-		// Sort so that symbol startsWith appear first
 		matched.sort((a, b) => {
 			const aStarts = a.value.toLowerCase().startsWith(lower) ? 0 : 1;
 			const bStarts = b.value.toLowerCase().startsWith(lower) ? 0 : 1;
 			if (aStarts !== bStarts) return aStarts - bStarts;
-			return a.label.localeCompare(b.label); // fallback alphabetical
+			return a.label.localeCompare(b.label);
 		});
 
-		// Limit to 50 results
-		const limited = matched.slice(0, 100);
-
-		// Merge selected + matched (avoid duplicates)
+		// Use Map to deduplicate, prioritizing matched
 		const map = new Map<string, { label: string; value: string }>();
-		[...selected, ...limited].forEach((opt) => {
-			map.set(opt.value, opt);
-		});
+		matched.forEach((opt) => map.set(opt.value, opt));
+
+		// Overwrite with selected so label = value for selected ones
+		selected.forEach((opt) => map.set(opt.value, opt));
 
 		return [{ group: "Stocks + ETFs", items: Array.from(map.values()) }];
 	}, [search, allOptions, form.values.initialEquities]);
@@ -94,18 +95,31 @@ export const AddWatchlistModal = ({
 		typeof form.values | null
 	>(null);
 
-	useEffect(() => {
-		console.log(form.values.initialEquities);
-	}, [form.values.initialEquities]);
+	const renderOption: Parameters<typeof MultiSelect>[0]["renderOption"] = ({
+		option,
+		...others
+	}) => {
+		const name = option.label.split(" - ")[1]?.trim();
+		return (
+			<div {...others}>
+				<Flex direction="column" gap={0}>
+					<Text size="md">{name}</Text>
+					<Text size="sm" c="dimmed">
+						{option.value}
+					</Text>
+				</Flex>
+			</div>
+		);
+	};
 
 	return (
 		<>
 			<Modal
 				opened={opened}
 				onClose={customOnClose}
-				title={<Text size="xl">Add Watchlist</Text>}
+				title={<Text size="xxl">Add Watchlist</Text>}
 				centered
-				size={"lg"}
+				size="xl"
 			>
 				<form onSubmit={form.onSubmit(setSubmittedValues)}>
 					<Flex direction="column" gap="sm">
@@ -114,7 +128,9 @@ export const AddWatchlistModal = ({
 							{...form.getInputProps("watchlistName")}
 							label="New Watchlist Name"
 							withAsterisk
+							size="md"
 						/>
+
 						<MultiSelect
 							label="Initial Equities"
 							placeholder="Search Equities"
@@ -123,13 +139,29 @@ export const AddWatchlistModal = ({
 							searchValue={search}
 							onSearchChange={setSearch}
 							value={form.values.initialEquities}
-							onChange={(val) => {
-								form.setFieldValue("initialEquities", val);
-							}}
-							limit={50}
+							onChange={(val) => form.setFieldValue("initialEquities", val)}
+							limit={100}
+							nothingFoundMessage={search ? "No results found..." : ""}
 							hidePickedOptions
+							size="md"
+							maxDropdownHeight={200}
+							styles={{
+								input: {
+									maxHeight: 100, // Limit input area height
+									overflowY: "auto",
+								},
+							}}
+							renderOption={renderOption}
+							clearable
+							comboboxProps={{
+								position: "bottom",
+								middlewares: { flip: false, shift: false },
+								withinPortal: false,
+								styles: { dropdown: { position: "static" } },
+							}}
 						/>
 					</Flex>
+
 					<Button type="submit" mt="md" size={"sm"}>
 						Submit
 					</Button>
