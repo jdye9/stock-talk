@@ -8,26 +8,33 @@ import {
 } from "@mantine/core";
 import { AddWatchlistModalProps } from "./types.ts";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useGetTickers } from "../../../../hooks/useTickers.ts";
+import { useGetCrypto } from "../../../../hooks/useCrypto.ts";
 
 export const AddWatchlistModal = ({
 	opened,
 	addModalHandlers,
 }: AddWatchlistModalProps) => {
-	const { data } = useGetTickers();
+	const { data: tickers } = useGetTickers();
+	const { data: crypto } = useGetCrypto();
 
-	const [search, setSearch] = useState("");
+	const [searchEquity, setSearchEquity] = useState("");
+	const [searchCrypto, setSearchCrypto] = useState("");
 	const form = useForm({
 		mode: "controlled",
-		initialValues: { watchlistName: "", initialEquities: [] as string[] },
+		initialValues: {
+			watchlistName: "",
+			initialTickers: [] as string[],
+			initialCrypto: [] as string[],
+		},
 		validate: {
 			watchlistName: isNotEmpty("Watchlist Name is required"),
 		},
 	});
 
-	const allOptions = useMemo(() => {
-		if (!data) return [];
+	const allTickers = useMemo(() => {
+		if (!tickers) return [];
 
 		const mapToOptions = (tickers: { symbol: string; name: string }[]) =>
 			tickers.map((t) => ({
@@ -36,33 +43,50 @@ export const AddWatchlistModal = ({
 			}));
 
 		const combinedStocks = [
-			...mapToOptions(data.nasdaq),
-			...mapToOptions(data.other),
+			...mapToOptions(tickers.nasdaq),
+			...mapToOptions(tickers.other),
 		];
 
 		// Alphabetize by label
 		combinedStocks.sort((a, b) => a.label.localeCompare(b.label));
 
 		return combinedStocks;
-	}, [data]);
+	}, [tickers]);
 
-	// Filter options by search and limit to 50
-	const displayedOptions = useMemo(() => {
-		if (!allOptions.length) return [];
+	const allCrypto = useMemo(() => {
+		if (!crypto) return [];
 
-		// Selected options should always display the ticker (value) as label
-		const selectedSet = new Set(form.values.initialEquities);
-		const selected = allOptions
-			.filter((opt) => selectedSet.has(opt.value))
+		const mapToOptions = (
+			cryptoList: { id: string; symbol: string; name: string }[]
+		) =>
+			cryptoList.map((c) => ({
+				label: `${c.symbol} - ${c.name}`,
+				value: c.id,
+				symbol: c.symbol,
+			}));
+
+		const combinedCrypto = [...mapToOptions(crypto)];
+
+		// Alphabetize by label
+		combinedCrypto.sort((a, b) => a.label.localeCompare(b.label));
+
+		return combinedCrypto;
+	}, [crypto]);
+
+	const filteredTickers = useMemo(() => {
+		if (!allTickers.length) return [];
+
+		const selectedTickerSet = new Set(form.values.initialTickers);
+
+		const selectedTickers = allTickers
+			.filter((opt) => selectedTickerSet.has(opt.value))
 			.map((opt) => ({ ...opt, label: opt.value }));
 
-		if (!search) {
-			return [{ group: "Stocks + ETFs", items: selected }];
-		}
+		if (!searchEquity) return selectedTickers;
 
-		const lower = search.toLowerCase();
+		const lower = searchEquity.toLowerCase();
 
-		const matched = allOptions.filter(
+		const matched = allTickers.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(lower) ||
 				opt.value.toLowerCase().includes(lower)
@@ -75,30 +99,64 @@ export const AddWatchlistModal = ({
 			return a.label.localeCompare(b.label);
 		});
 
-		// Use Map to deduplicate, prioritizing matched
-		const map = new Map<string, { label: string; value: string }>();
-		matched.forEach((opt) => map.set(opt.value, opt));
+		// Overwrite label with just value if in selected
+		const matchedWithSelectedLabel = matched.map((opt) =>
+			selectedTickerSet.has(opt.value) ? { ...opt, label: opt.value } : opt
+		);
 
-		// Overwrite with selected so label = value for selected ones
-		selected.forEach((opt) => map.set(opt.value, opt));
+		return matchedWithSelectedLabel;
+	}, [allTickers, form.values.initialTickers, searchEquity]);
 
-		return [{ group: "Stocks + ETFs", items: Array.from(map.values()) }];
-	}, [search, allOptions, form.values.initialEquities]);
+	const filteredCrypto = useMemo(() => {
+		console.log(allCrypto);
+		if (!allCrypto.length) return [];
 
+		const selectedCryptoSet = new Set(form.values.initialCrypto);
+
+		const selectedCrypto = allCrypto
+			.filter((opt) => selectedCryptoSet.has(opt.value))
+			.map((opt) => ({ ...opt, label: opt.symbol }));
+
+		if (!searchCrypto) return selectedCrypto;
+
+		const lower = searchCrypto.toLowerCase();
+
+		const matched = allCrypto.filter(
+			(opt) =>
+				opt.label.toLowerCase().includes(lower) ||
+				opt.symbol.toLowerCase().includes(lower)
+		);
+
+		console.log(matched);
+
+		matched.sort((a, b) => {
+			const aStarts = a.symbol.toLowerCase().startsWith(lower) ? 0 : 1;
+			const bStarts = b.symbol.toLowerCase().startsWith(lower) ? 0 : 1;
+			if (aStarts !== bStarts) return aStarts - bStarts;
+			return a.label.localeCompare(b.label);
+		});
+
+		// Overwrite label with just value if in selected
+		const matchedWithSelectedLabel = matched.map((opt) =>
+			selectedCryptoSet.has(opt.value) ? { ...opt, label: opt.symbol } : opt
+		);
+
+		return matchedWithSelectedLabel;
+	}, [allCrypto, form.values.initialCrypto, searchCrypto]);
 	const customOnClose = () => {
 		form.reset();
 		addModalHandlers.close();
-		setSearch(""); // clear search on close
+		setSearchEquity("");
+		setSearchCrypto("");
 	};
 
 	const [submittedValues, setSubmittedValues] = useState<
 		typeof form.values | null
 	>(null);
 
-	const renderOption: Parameters<typeof MultiSelect>[0]["renderOption"] = ({
-		option,
-		...others
-	}) => {
+	const renderEquityOption: Parameters<
+		typeof MultiSelect
+	>[0]["renderOption"] = ({ option, ...others }) => {
 		const name = option.label.split(" - ")[1]?.trim();
 		return (
 			<div {...others}>
@@ -106,6 +164,22 @@ export const AddWatchlistModal = ({
 					<Text size="md">{name}</Text>
 					<Text size="sm" c="dimmed">
 						{option.value}
+					</Text>
+				</Flex>
+			</div>
+		);
+	};
+
+	const renderCryptoOption: Parameters<
+		typeof MultiSelect
+	>[0]["renderOption"] = ({ option, ...others }) => {
+		const [symbol, name, id] = option.label.split(" - ");
+		return (
+			<div {...others}>
+				<Flex direction="column" gap={0}>
+					<Text size="md">{name}</Text>
+					<Text size="sm" c="dimmed">
+						{symbol}
 					</Text>
 				</Flex>
 			</div>
@@ -134,24 +208,54 @@ export const AddWatchlistModal = ({
 						<MultiSelect
 							label="Initial Equities"
 							placeholder="Search Equities"
-							data={displayedOptions}
+							data={filteredTickers}
 							searchable
-							searchValue={search}
-							onSearchChange={setSearch}
-							value={form.values.initialEquities}
-							onChange={(val) => form.setFieldValue("initialEquities", val)}
+							searchValue={searchEquity}
+							onSearchChange={setSearchEquity}
+							value={form.values.initialTickers}
+							onChange={(val) => form.setFieldValue("initialTickers", val)}
 							limit={100}
-							nothingFoundMessage={search ? "No results found..." : ""}
+							nothingFoundMessage={searchEquity ? "No results found..." : ""}
 							hidePickedOptions
 							size="md"
 							maxDropdownHeight={200}
 							styles={{
 								input: {
-									maxHeight: 100, // Limit input area height
+									maxHeight: 100,
 									overflowY: "auto",
 								},
 							}}
-							renderOption={renderOption}
+							renderOption={renderEquityOption}
+							clearable
+							comboboxProps={{
+								position: "bottom",
+								middlewares: { flip: false, shift: false },
+								withinPortal: false,
+								styles: { dropdown: { position: "static" } },
+							}}
+						/>
+
+						<MultiSelect
+							label="Initial Cryptocurrencies"
+							placeholder="Search Cryptocurrencies"
+							data={filteredCrypto}
+							searchable
+							searchValue={searchCrypto}
+							onSearchChange={setSearchCrypto}
+							value={form.values.initialCrypto}
+							onChange={(val) => form.setFieldValue("initialCrypto", val)}
+							limit={100}
+							nothingFoundMessage={searchCrypto ? "No results found..." : ""}
+							hidePickedOptions
+							size="md"
+							maxDropdownHeight={200}
+							styles={{
+								input: {
+									maxHeight: 100,
+									overflowY: "auto",
+								},
+							}}
+							renderOption={renderCryptoOption}
 							clearable
 							comboboxProps={{
 								position: "bottom",

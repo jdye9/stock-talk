@@ -6,7 +6,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import "./index.css";
 
 const theme = createTheme({
-	fontFamily: "Comic Sans MS",
+	fontFamily: "Montserrat Alternates",
 	fontSizes: {
 		xs: "0.75rem",
 		sm: "1rem",
