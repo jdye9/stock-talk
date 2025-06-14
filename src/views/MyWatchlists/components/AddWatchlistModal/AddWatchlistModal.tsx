@@ -40,6 +40,8 @@ export const AddWatchlistModal = ({
 			tickers.map((t) => ({
 				label: `${t.symbol} - ${t.name}`,
 				value: t.symbol,
+				symbol: t.symbol,
+				name: t.name,
 			}));
 
 		const combinedStocks = [
@@ -63,6 +65,7 @@ export const AddWatchlistModal = ({
 				label: `${c.symbol} - ${c.name}`,
 				value: c.id,
 				symbol: c.symbol,
+				name: c.name,
 			}));
 
 		const combinedCrypto = [...mapToOptions(crypto)];
@@ -89,14 +92,55 @@ export const AddWatchlistModal = ({
 		const matched = allTickers.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(lower) ||
-				opt.value.toLowerCase().includes(lower)
+				opt.value.toLowerCase().includes(lower) ||
+				selectedTickerSet.has(opt.value)
 		);
 
 		matched.sort((a, b) => {
-			const aStarts = a.value.toLowerCase().startsWith(lower) ? 0 : 1;
-			const bStarts = b.value.toLowerCase().startsWith(lower) ? 0 : 1;
-			if (aStarts !== bStarts) return aStarts - bStarts;
-			return a.label.localeCompare(b.label);
+			const aSymbol = a.symbol?.toLowerCase() ?? a.value?.toLowerCase() ?? "";
+			const bSymbol = b.symbol?.toLowerCase() ?? b.value?.toLowerCase() ?? "";
+			const aName =
+				a.name?.toLowerCase() ?? a.label.split(" - ")[1]?.toLowerCase() ?? "";
+			const bName =
+				b.name?.toLowerCase() ?? b.label.split(" - ")[1]?.toLowerCase() ?? "";
+
+			// 1. Exact name match
+			if (aName === lower && bName !== lower) return -1;
+			if (bName === lower && aName !== lower) return 1;
+
+			// 2. Exact symbol match
+			if (aSymbol === lower && bSymbol !== lower) return -1;
+			if (bSymbol === lower && aSymbol !== lower) return 1;
+
+			// 3. Prefix name match
+			const aPrefix = aName.startsWith(lower);
+			const bPrefix = bName.startsWith(lower);
+			if (aPrefix && !bPrefix) return -1;
+			if (bPrefix && !aPrefix) return 1;
+			if (aPrefix && bPrefix) {
+				// Shorter name comes first, then alphabetical
+				if (aName.length !== bName.length) return aName.length - bName.length;
+				return aName.localeCompare(bName);
+			}
+
+			// 4. Prefix symbol match
+			const aSymPrefix = aSymbol.startsWith(lower);
+			const bSymPrefix = bSymbol.startsWith(lower);
+			if (aSymPrefix && !bSymPrefix) return -1;
+			if (bSymPrefix && !aSymPrefix) return 1;
+			if (aSymPrefix && bSymPrefix) {
+				// Shorter symbol comes first, then alphabetical
+				if (aSymbol.length !== bSymbol.length)
+					return aSymbol.length - bSymbol.length;
+				return aSymbol.localeCompare(bSymbol);
+			}
+
+			// 5. Alphabetical by name, then symbol (shorter symbol first)
+			const nameCompare = aName.localeCompare(bName);
+			if (nameCompare !== 0) return nameCompare;
+			if (aSymbol.length !== bSymbol.length)
+				return aSymbol.length - bSymbol.length;
+			return aSymbol.localeCompare(bSymbol);
 		});
 
 		// Overwrite label with just value if in selected
@@ -112,10 +156,12 @@ export const AddWatchlistModal = ({
 		if (!allCrypto.length) return [];
 
 		const selectedCryptoSet = new Set(form.values.initialCrypto);
+		console.log(selectedCryptoSet);
 
 		const selectedCrypto = allCrypto
 			.filter((opt) => selectedCryptoSet.has(opt.value))
 			.map((opt) => ({ ...opt, label: opt.symbol }));
+		console.log(selectedCrypto);
 
 		if (!searchCrypto) return selectedCrypto;
 
@@ -124,16 +170,55 @@ export const AddWatchlistModal = ({
 		const matched = allCrypto.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(lower) ||
-				opt.symbol.toLowerCase().includes(lower)
+				opt.symbol.toLowerCase().includes(lower) ||
+				selectedCryptoSet.has(opt.value)
 		);
 
-		console.log(matched);
-
 		matched.sort((a, b) => {
-			const aStarts = a.symbol.toLowerCase().startsWith(lower) ? 0 : 1;
-			const bStarts = b.symbol.toLowerCase().startsWith(lower) ? 0 : 1;
-			if (aStarts !== bStarts) return aStarts - bStarts;
-			return a.label.localeCompare(b.label);
+			const aSymbol = a.symbol?.toLowerCase() ?? "";
+			const bSymbol = b.symbol?.toLowerCase() ?? "";
+			const aName =
+				a.name?.toLowerCase() ?? a.label.split(" - ")[1]?.toLowerCase() ?? "";
+			const bName =
+				b.name?.toLowerCase() ?? b.label.split(" - ")[1]?.toLowerCase() ?? "";
+
+			// 1. Exact name match
+			if (aName === lower && bName !== lower) return -1;
+			if (bName === lower && aName !== lower) return 1;
+
+			// 2. Exact symbol match
+			if (aSymbol === lower && bSymbol !== lower) return -1;
+			if (bSymbol === lower && aSymbol !== lower) return 1;
+
+			// 2. Prefix name match
+			const aPrefix = aName.startsWith(lower);
+			const bPrefix = bName.startsWith(lower);
+			if (aPrefix && !bPrefix) return -1;
+			if (bPrefix && !aPrefix) return 1;
+			if (aPrefix && bPrefix) {
+				// Shorter name comes first, then alphabetical
+				if (aName.length !== bName.length) return aName.length - bName.length;
+				return aName.localeCompare(bName);
+			}
+
+			// 4. Prefix symbol match
+			const aSymPrefix = aSymbol.startsWith(lower);
+			const bSymPrefix = bSymbol.startsWith(lower);
+			if (aSymPrefix && !bSymPrefix) return -1;
+			if (bSymPrefix && !aSymPrefix) return 1;
+			if (aSymPrefix && bSymPrefix) {
+				// Shorter symbol comes first, then alphabetical
+				if (aSymbol.length !== bSymbol.length)
+					return aSymbol.length - bSymbol.length;
+				return aSymbol.localeCompare(bSymbol);
+			}
+
+			// 5. Alphabetical by name, then symbol (shorter symbol first)
+			const nameCompare = aName.localeCompare(bName);
+			if (nameCompare !== 0) return nameCompare;
+			if (aSymbol.length !== bSymbol.length)
+				return aSymbol.length - bSymbol.length;
+			return aSymbol.localeCompare(bSymbol);
 		});
 
 		// Overwrite label with just value if in selected
@@ -143,6 +228,7 @@ export const AddWatchlistModal = ({
 
 		return matchedWithSelectedLabel;
 	}, [allCrypto, form.values.initialCrypto, searchCrypto]);
+
 	const customOnClose = () => {
 		form.reset();
 		addModalHandlers.close();
@@ -173,7 +259,7 @@ export const AddWatchlistModal = ({
 	const renderCryptoOption: Parameters<
 		typeof MultiSelect
 	>[0]["renderOption"] = ({ option, ...others }) => {
-		const [symbol, name, id] = option.label.split(" - ");
+		const [symbol, name] = option.label.split(" - ");
 		return (
 			<div {...others}>
 				<Flex direction="column" gap={0}>
@@ -230,8 +316,8 @@ export const AddWatchlistModal = ({
 							comboboxProps={{
 								position: "bottom",
 								middlewares: { flip: false, shift: false },
-								withinPortal: false,
-								styles: { dropdown: { position: "static" } },
+								withinPortal: true,
+								// styles: { dropdown: { position: "static" } },
 							}}
 						/>
 
@@ -260,8 +346,8 @@ export const AddWatchlistModal = ({
 							comboboxProps={{
 								position: "bottom",
 								middlewares: { flip: false, shift: false },
-								withinPortal: false,
-								styles: { dropdown: { position: "static" } },
+								withinPortal: true,
+								// styles: { dropdown: { position: "static" } },
 							}}
 						/>
 					</Flex>
