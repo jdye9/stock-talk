@@ -38,8 +38,8 @@ export const WatchlistTable = () => {
 	};
 
 	const rows = sortedData.map((row) => (
-		<Table.Tr key={row.ticker} fz={14}>
-			<Table.Td>{row.ticker}</Table.Td>
+		<Table.Tr key={row.stock} fz={14}>
+			<Table.Td>{row.stock}</Table.Td>
 			<Table.Td>$ {row.price}</Table.Td>
 			<Table.Td>$ {row.priceChange}</Table.Td>
 			<Table.Td>{row.priceChangePercent} %</Table.Td>
@@ -74,11 +74,11 @@ export const WatchlistTable = () => {
 						className={cx(classes.head, { [classes.scrolled]: scrolled })}
 					>
 						<TableHeader
-							sorted={sortBy === "ticker"}
+							sorted={sortBy === "stock"}
 							sortDirection={sortDirection}
-							onSort={() => setSorting("ticker")}
+							onSort={() => setSorting("stock")}
 						>
-							Ticker
+							Stock
 						</TableHeader>
 						<TableHeader
 							sorted={sortBy === "price"}

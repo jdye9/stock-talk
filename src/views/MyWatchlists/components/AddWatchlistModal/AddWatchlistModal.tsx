@@ -8,16 +8,21 @@ import {
 } from "@mantine/core";
 import { AddWatchlistModalProps } from "./types.ts";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { useMemo, useState } from "react";
-import { useGetTickers } from "../../../../hooks/useTickers.ts";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useGetStocks } from "../../../../hooks/useStocks.ts";
 import { useGetCrypto } from "../../../../hooks/useCrypto.ts";
+import { useCreateWatchlist } from "../../../../hooks/useWatchlist.ts";
+import { Crypto, Stock } from "../../../../hooks/types.ts";
+import { notifications } from "@mantine/notifications";
 
 export const AddWatchlistModal = ({
 	opened,
 	addModalHandlers,
 }: AddWatchlistModalProps) => {
-	const { data: tickers } = useGetTickers();
+	const { data: stocks } = useGetStocks();
 	const { data: crypto } = useGetCrypto();
+	const { mutate: createWatchlist, isSuccess: createWatchListSuccess } =
+		useCreateWatchlist();
 
 	const [searchEquity, setSearchEquity] = useState("");
 	const [searchCrypto, setSearchCrypto] = useState("");
@@ -25,7 +30,7 @@ export const AddWatchlistModal = ({
 		mode: "controlled",
 		initialValues: {
 			watchlistName: "",
-			initialTickers: [] as string[],
+			initialStocks: [] as string[],
 			initialCrypto: [] as string[],
 		},
 		validate: {
@@ -33,38 +38,33 @@ export const AddWatchlistModal = ({
 		},
 	});
 
-	const allTickers = useMemo(() => {
-		if (!tickers) return [];
+	const allStocks = useMemo(() => {
+		if (!stocks) return [];
 
-		const mapToOptions = (tickers: { symbol: string; name: string }[]) =>
-			tickers.map((t) => ({
-				label: `${t.symbol} - ${t.name}`,
-				value: t.symbol,
-				symbol: t.symbol,
+		const mapToOptions = (stocks: Stock[]) =>
+			stocks.map((t) => ({
+				label: `${t.ticker} - ${t.name}`,
+				value: t.id,
+				ticker: t.ticker,
 				name: t.name,
 			}));
 
-		const combinedStocks = [
-			...mapToOptions(tickers.nasdaq),
-			...mapToOptions(tickers.other),
-		];
+		const combinedStocks = [...mapToOptions(stocks)];
 
 		// Alphabetize by label
 		combinedStocks.sort((a, b) => a.label.localeCompare(b.label));
 
 		return combinedStocks;
-	}, [tickers]);
+	}, [stocks]);
 
 	const allCrypto = useMemo(() => {
 		if (!crypto) return [];
 
-		const mapToOptions = (
-			cryptoList: { id: string; symbol: string; name: string }[]
-		) =>
+		const mapToOptions = (cryptoList: Crypto[]) =>
 			cryptoList.map((c) => ({
-				label: `${c.symbol} - ${c.name}`,
+				label: `${c.ticker} - ${c.name}`,
 				value: c.id,
-				symbol: c.symbol,
+				ticker: c.ticker,
 				name: c.name,
 			}));
 
@@ -76,29 +76,29 @@ export const AddWatchlistModal = ({
 		return combinedCrypto;
 	}, [crypto]);
 
-	const filteredTickers = useMemo(() => {
-		if (!allTickers.length) return [];
+	const filteredStocks = useMemo(() => {
+		if (!allStocks.length) return [];
 
-		const selectedTickerSet = new Set(form.values.initialTickers);
+		const selectedStockSet = new Set(form.values.initialStocks);
 
-		const selectedTickers = allTickers
-			.filter((opt) => selectedTickerSet.has(opt.value))
-			.map((opt) => ({ ...opt, label: opt.value }));
+		const selectedStocks = allStocks
+			.filter((opt) => selectedStockSet.has(opt.value))
+			.map((opt) => ({ ...opt, label: opt.ticker }));
 
-		if (!searchEquity) return selectedTickers;
+		if (!searchEquity) return selectedStocks;
 
 		const lower = searchEquity.toLowerCase();
 
-		const matched = allTickers.filter(
+		const matched = allStocks.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(lower) ||
 				opt.value.toLowerCase().includes(lower) ||
-				selectedTickerSet.has(opt.value)
+				selectedStockSet.has(opt.value)
 		);
 
 		matched.sort((a, b) => {
-			const aSymbol = a.symbol?.toLowerCase() ?? a.value?.toLowerCase() ?? "";
-			const bSymbol = b.symbol?.toLowerCase() ?? b.value?.toLowerCase() ?? "";
+			const aTicker = a.ticker?.toLowerCase() ?? a.value?.toLowerCase() ?? "";
+			const bTicker = b.ticker?.toLowerCase() ?? b.value?.toLowerCase() ?? "";
 			const aName =
 				a.name?.toLowerCase() ?? a.label.split(" - ")[1]?.toLowerCase() ?? "";
 			const bName =
@@ -108,9 +108,9 @@ export const AddWatchlistModal = ({
 			if (aName === lower && bName !== lower) return -1;
 			if (bName === lower && aName !== lower) return 1;
 
-			// 2. Exact symbol match
-			if (aSymbol === lower && bSymbol !== lower) return -1;
-			if (bSymbol === lower && aSymbol !== lower) return 1;
+			// 2. Exact ticker match
+			if (aTicker === lower && bTicker !== lower) return -1;
+			if (bTicker === lower && aTicker !== lower) return 1;
 
 			// 3. Prefix name match
 			const aPrefix = aName.startsWith(lower);
@@ -123,33 +123,33 @@ export const AddWatchlistModal = ({
 				return aName.localeCompare(bName);
 			}
 
-			// 4. Prefix symbol match
-			const aSymPrefix = aSymbol.startsWith(lower);
-			const bSymPrefix = bSymbol.startsWith(lower);
+			// 4. Prefix ticker match
+			const aSymPrefix = aTicker.startsWith(lower);
+			const bSymPrefix = bTicker.startsWith(lower);
 			if (aSymPrefix && !bSymPrefix) return -1;
 			if (bSymPrefix && !aSymPrefix) return 1;
 			if (aSymPrefix && bSymPrefix) {
-				// Shorter symbol comes first, then alphabetical
-				if (aSymbol.length !== bSymbol.length)
-					return aSymbol.length - bSymbol.length;
-				return aSymbol.localeCompare(bSymbol);
+				// Shorter ticker comes first, then alphabetical
+				if (aTicker.length !== bTicker.length)
+					return aTicker.length - bTicker.length;
+				return aTicker.localeCompare(bTicker);
 			}
 
-			// 5. Alphabetical by name, then symbol (shorter symbol first)
+			// 5. Alphabetical by name, then ticker (shorter ticker first)
 			const nameCompare = aName.localeCompare(bName);
 			if (nameCompare !== 0) return nameCompare;
-			if (aSymbol.length !== bSymbol.length)
-				return aSymbol.length - bSymbol.length;
-			return aSymbol.localeCompare(bSymbol);
+			if (aTicker.length !== bTicker.length)
+				return aTicker.length - bTicker.length;
+			return aTicker.localeCompare(bTicker);
 		});
 
 		// Overwrite label with just value if in selected
 		const matchedWithSelectedLabel = matched.map((opt) =>
-			selectedTickerSet.has(opt.value) ? { ...opt, label: opt.value } : opt
+			selectedStockSet.has(opt.value) ? { ...opt, label: opt.ticker } : opt
 		);
 
 		return matchedWithSelectedLabel;
-	}, [allTickers, form.values.initialTickers, searchEquity]);
+	}, [allStocks, form.values.initialStocks, searchEquity]);
 
 	const filteredCrypto = useMemo(() => {
 		console.log(allCrypto);
@@ -160,7 +160,7 @@ export const AddWatchlistModal = ({
 
 		const selectedCrypto = allCrypto
 			.filter((opt) => selectedCryptoSet.has(opt.value))
-			.map((opt) => ({ ...opt, label: opt.symbol }));
+			.map((opt) => ({ ...opt, label: opt.ticker }));
 		console.log(selectedCrypto);
 
 		if (!searchCrypto) return selectedCrypto;
@@ -170,13 +170,13 @@ export const AddWatchlistModal = ({
 		const matched = allCrypto.filter(
 			(opt) =>
 				opt.label.toLowerCase().includes(lower) ||
-				opt.symbol.toLowerCase().includes(lower) ||
+				opt.ticker.toLowerCase().includes(lower) ||
 				selectedCryptoSet.has(opt.value)
 		);
 
 		matched.sort((a, b) => {
-			const aSymbol = a.symbol?.toLowerCase() ?? "";
-			const bSymbol = b.symbol?.toLowerCase() ?? "";
+			const aTicker = a.ticker?.toLowerCase() ?? "";
+			const bTicker = b.ticker?.toLowerCase() ?? "";
 			const aName =
 				a.name?.toLowerCase() ?? a.label.split(" - ")[1]?.toLowerCase() ?? "";
 			const bName =
@@ -186,9 +186,9 @@ export const AddWatchlistModal = ({
 			if (aName === lower && bName !== lower) return -1;
 			if (bName === lower && aName !== lower) return 1;
 
-			// 2. Exact symbol match
-			if (aSymbol === lower && bSymbol !== lower) return -1;
-			if (bSymbol === lower && aSymbol !== lower) return 1;
+			// 2. Exact ticker match
+			if (aTicker === lower && bTicker !== lower) return -1;
+			if (bTicker === lower && aTicker !== lower) return 1;
 
 			// 2. Prefix name match
 			const aPrefix = aName.startsWith(lower);
@@ -201,55 +201,72 @@ export const AddWatchlistModal = ({
 				return aName.localeCompare(bName);
 			}
 
-			// 4. Prefix symbol match
-			const aSymPrefix = aSymbol.startsWith(lower);
-			const bSymPrefix = bSymbol.startsWith(lower);
+			// 4. Prefix ticker match
+			const aSymPrefix = aTicker.startsWith(lower);
+			const bSymPrefix = bTicker.startsWith(lower);
 			if (aSymPrefix && !bSymPrefix) return -1;
 			if (bSymPrefix && !aSymPrefix) return 1;
 			if (aSymPrefix && bSymPrefix) {
-				// Shorter symbol comes first, then alphabetical
-				if (aSymbol.length !== bSymbol.length)
-					return aSymbol.length - bSymbol.length;
-				return aSymbol.localeCompare(bSymbol);
+				// Shorter ticker comes first, then alphabetical
+				if (aTicker.length !== bTicker.length)
+					return aTicker.length - bTicker.length;
+				return aTicker.localeCompare(bTicker);
 			}
 
-			// 5. Alphabetical by name, then symbol (shorter symbol first)
+			// 5. Alphabetical by name, then ticker (shorter ticker first)
 			const nameCompare = aName.localeCompare(bName);
 			if (nameCompare !== 0) return nameCompare;
-			if (aSymbol.length !== bSymbol.length)
-				return aSymbol.length - bSymbol.length;
-			return aSymbol.localeCompare(bSymbol);
+			if (aTicker.length !== bTicker.length)
+				return aTicker.length - bTicker.length;
+			return aTicker.localeCompare(bTicker);
 		});
 
 		// Overwrite label with just value if in selected
 		const matchedWithSelectedLabel = matched.map((opt) =>
-			selectedCryptoSet.has(opt.value) ? { ...opt, label: opt.symbol } : opt
+			selectedCryptoSet.has(opt.value) ? { ...opt, label: opt.ticker } : opt
 		);
 
 		return matchedWithSelectedLabel;
 	}, [allCrypto, form.values.initialCrypto, searchCrypto]);
 
-	const customOnClose = () => {
+	const customOnClose = useCallback(() => {
 		form.reset();
 		addModalHandlers.close();
 		setSearchEquity("");
 		setSearchCrypto("");
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	const handleSubmit = () => {
+		createWatchlist({
+			name: form.values?.watchlistName ?? "",
+			stocks: form.values?.initialStocks ?? [],
+			crypto: form.values?.initialCrypto ?? [],
+		});
 	};
 
-	const [submittedValues, setSubmittedValues] = useState<
-		typeof form.values | null
-	>(null);
+	useEffect(() => {
+		if (createWatchListSuccess) {
+			customOnClose();
+			notifications.show({
+				title: "Success",
+				message: "Watchlist created successfully",
+				color: "green",
+				position: "top-right",
+			});
+		}
+	}, [createWatchListSuccess, customOnClose]);
 
 	const renderEquityOption: Parameters<
 		typeof MultiSelect
 	>[0]["renderOption"] = ({ option, ...others }) => {
-		const name = option.label.split(" - ")[1]?.trim();
+		const [ticker, name] = option.label.split(" - ");
 		return (
 			<div {...others}>
 				<Flex direction="column" gap={0}>
 					<Text size="md">{name}</Text>
 					<Text size="sm" c="dimmed">
-						{option.value}
+						{ticker}
 					</Text>
 				</Flex>
 			</div>
@@ -259,13 +276,13 @@ export const AddWatchlistModal = ({
 	const renderCryptoOption: Parameters<
 		typeof MultiSelect
 	>[0]["renderOption"] = ({ option, ...others }) => {
-		const [symbol, name] = option.label.split(" - ");
+		const [ticker, name] = option.label.split(" - ");
 		return (
 			<div {...others}>
 				<Flex direction="column" gap={0}>
 					<Text size="md">{name}</Text>
 					<Text size="sm" c="dimmed">
-						{symbol}
+						{ticker}
 					</Text>
 				</Flex>
 			</div>
@@ -281,7 +298,7 @@ export const AddWatchlistModal = ({
 				centered
 				size="xl"
 			>
-				<form onSubmit={form.onSubmit(setSubmittedValues)}>
+				<form onSubmit={form.onSubmit(handleSubmit)}>
 					<Flex direction="column" gap="sm">
 						<TextInput
 							data-autofocus
@@ -294,12 +311,12 @@ export const AddWatchlistModal = ({
 						<MultiSelect
 							label="Initial Equities"
 							placeholder="Search Equities"
-							data={filteredTickers}
+							data={filteredStocks}
 							searchable
 							searchValue={searchEquity}
 							onSearchChange={setSearchEquity}
-							value={form.values.initialTickers}
-							onChange={(val) => form.setFieldValue("initialTickers", val)}
+							value={form.values.initialStocks}
+							onChange={(val) => form.setFieldValue("initialStocks", val)}
 							limit={100}
 							nothingFoundMessage={searchEquity ? "No results found..." : ""}
 							hidePickedOptions

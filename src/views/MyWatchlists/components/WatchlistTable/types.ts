@@ -1,5 +1,5 @@
 export type RowData = {
-	ticker: string;
+	stock: string;
 	price: number;
 	priceChange: number;
 	priceChangePercent: number;

@@ -1,14 +1,7 @@
-// src/queries/useTickers.ts
+// src/queries/useStocks.ts
 import { useQuery } from "@tanstack/react-query";
 import { customAxios } from "../lib/axios";
-
-type Crypto = {
-	symbol: string;
-	id: string;
-	name: string;
-};
-
-type CryptoResponse = Crypto[];
+import { CryptoResponse } from "./types";
 
 export const useGetCrypto = () =>
 	useQuery<CryptoResponse>({
@@ -17,5 +10,4 @@ export const useGetCrypto = () =>
 			const { data } = await customAxios.get<CryptoResponse>("/crypto");
 			return data;
 		},
-		staleTime: 1000 * 60 * 60 * 24, // 24 hours
 	});

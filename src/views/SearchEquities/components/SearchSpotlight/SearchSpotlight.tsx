@@ -2,20 +2,20 @@ import { useMemo, useState } from "react";
 import { Spotlight } from "@mantine/spotlight";
 import { Box, Flex, Group, Text } from "@mantine/core";
 import { IconChevronRight, IconSearch } from "@tabler/icons-react";
-import { useGetTickers } from "../../../../hooks/useTickers";
+import { useGetStocks } from "../../../../hooks/useStocks";
 import classes from "./search-spotlight.module.css";
 
 export const SearchSpotlight = () => {
 	const [search, setSearch] = useState("");
-	const { data } = useGetTickers();
+	const { data } = useGetStocks();
 
 	const allOptions = useMemo(() => {
 		if (!data) return [];
 
-		const mapToOptions = (tickers: { symbol: string; name: string }[]) =>
-			tickers.map((t) => ({
-				label: `${t.symbol} - ${t.name}`,
-				value: t.symbol,
+		const mapToOptions = (stocks: { ticker: string; name: string }[]) =>
+			stocks.map((t) => ({
+				label: `${t.ticker} - ${t.name}`,
+				value: t.ticker,
 			}));
 
 		const combinedStocks = [
