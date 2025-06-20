@@ -1,3 +1,5 @@
+import { Watchlist } from "../views/MyWatchlists/types";
+
 export type Stock = {
 	id: string;
 	ticker: string;
@@ -13,3 +15,11 @@ export type Crypto = {
 };
 
 export type CryptoResponse = Crypto[];
+
+export type GetWatchlistsResponse = Watchlist[];
+
+export type CreateWatchlistRequest = {
+	name: string;
+	stocks: string[];
+	crypto: string[];
+};
