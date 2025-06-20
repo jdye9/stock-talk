@@ -21,7 +21,7 @@ export const SearchInput = ({ spotlight }: SearchInputProps) => {
 				onClick={() => spotlight.open()}
 				size="lg"
 			>
-				Search Tickers
+				Search Stocks
 			</Button>
 		</Box>
 	);

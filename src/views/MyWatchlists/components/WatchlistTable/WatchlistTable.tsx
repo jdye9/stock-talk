@@ -2,34 +2,44 @@ import { useState } from "react";
 import { IconSearch } from "@tabler/icons-react";
 import { ScrollArea, Table, Text, TextInput } from "@mantine/core";
 import { TableHeader } from "./components";
-import { RowData, SortDirection } from "./types";
+import { RowData, SortDirection, WatchlistTableProps } from "./types";
 import { sortData } from "./utils";
-import { mockTableRows } from "./constants";
 import classes from "./watchlist-table.module.css";
 import cx from "clsx";
 
-export const WatchlistTable = () => {
+export const WatchlistTable = ({ stocks }: WatchlistTableProps) => {
 	const [search, setSearch] = useState("");
-	const [sortedData, setSortedData] = useState(mockTableRows);
 	const [sortBy, setSortBy] = useState<keyof RowData | "">("");
 	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 	const [scrolled, setScrolled] = useState(false);
+
+	const rowData = stocks.map(
+		(stock) =>
+			({
+				id: stock.id,
+				name: stock.name,
+				ticker: stock.ticker,
+				price: 1,
+				priceChange: 1,
+				priceChangePercent: 1,
+			} as RowData)
+	);
+
+	const [sortedData, setSortedData] = useState(rowData);
 
 	const setSorting = (field: keyof RowData) => {
 		const direction =
 			field === sortBy ? (sortDirection == "asc" ? "desc" : "asc") : "asc";
 		setSortDirection(direction);
 		setSortBy(field);
-		setSortedData(
-			sortData(mockTableRows, { sortBy: field, direction, search })
-		);
+		setSortedData(sortData(rowData, { sortBy: field, direction, search }));
 	};
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const { value } = event.currentTarget;
 		setSearch(value);
 		setSortedData(
-			sortData(mockTableRows, {
+			sortData(rowData, {
 				sortBy,
 				direction: sortDirection,
 				search: value,
@@ -38,8 +48,9 @@ export const WatchlistTable = () => {
 	};
 
 	const rows = sortedData.map((row) => (
-		<Table.Tr key={row.ticker} fz={14}>
+		<Table.Tr key={row.id} fz={14}>
 			<Table.Td>{row.ticker}</Table.Td>
+			<Table.Td>{row.name}</Table.Td>
 			<Table.Td>$ {row.price}</Table.Td>
 			<Table.Td>$ {row.priceChange}</Table.Td>
 			<Table.Td>{row.priceChangePercent} %</Table.Td>
@@ -57,8 +68,9 @@ export const WatchlistTable = () => {
 			/>
 			<ScrollArea
 				h={400}
-				onScrollPositionChange={({ y }) => {console.log(y); setScrolled(y !== 0)}}
-				overscrollBehavior={"contain"}
+				onScrollPositionChange={({ y }) => {
+					setScrolled(y !== 0);
+				}}
 			>
 				<Table
 					horizontalSpacing="md"
@@ -77,6 +89,13 @@ export const WatchlistTable = () => {
 							onSort={() => setSorting("ticker")}
 						>
 							Ticker
+						</TableHeader>
+						<TableHeader
+							sorted={sortBy === "name"}
+							sortDirection={sortDirection}
+							onSort={() => setSorting("name")}
+						>
+							Name
 						</TableHeader>
 						<TableHeader
 							sorted={sortBy === "price"}
@@ -105,7 +124,7 @@ export const WatchlistTable = () => {
 							rows
 						) : (
 							<Table.Tr>
-								<Table.Td colSpan={Object.keys(mockTableRows[0]).length}>
+								<Table.Td colSpan={Object.keys(sortedData[0]).length}>
 									<Text fw={500} ta="center">
 										Nothing found
 									</Text>

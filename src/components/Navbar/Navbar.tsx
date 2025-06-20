@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Center, Stack } from "@mantine/core";
+import { Box, Center, Stack } from "@mantine/core";
 import classes from "./navbar.module.css";
 import { IconChartLine } from "@tabler/icons-react";
 import { NavbarLink } from "./components";
@@ -54,9 +54,9 @@ export const Navbar = () => {
 				<IconChartLine size={30} />
 			</Center>
 
-			<div className={classes.navbarMain}>
+			<Box className={classes.navbarMain}>
 				<Stack justify="center">{topLinks}</Stack>
-			</div>
+			</Box>
 
 			<Stack justify="center">{bottomLinks}</Stack>
 		</nav>

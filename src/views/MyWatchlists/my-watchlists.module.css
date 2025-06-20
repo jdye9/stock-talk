@@ -8,3 +8,7 @@
 .scrollArea {
 	height: calc(100vh - 53px);
 }
+
+.loader {
+	margin: auto;
+}
